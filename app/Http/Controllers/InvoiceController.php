@@ -5,6 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Invoice;
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\InvoiceResource;
+use App\Http\Resources\InvoiceCollection;
+use App\Filters\InvoicesFilter;
 
 class InvoiceController extends Controller
 {
@@ -13,9 +18,18 @@ class InvoiceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $filter = new InvoicesFilter();
+        $queryItems = $filter->transform($request);
+
+        if (count($queryItems) == 0) {
+            return new InvoiceCollection(Invoice::paginate());
+        } else {
+            $invoices = Invoice::where($queryItems)->paginate();
+
+            return new InvoiceCollection($invoices->appends($request->query()));
+        }
     }
 
     /**
@@ -47,7 +61,12 @@ class InvoiceController extends Controller
      */
     public function show(Invoice $invoice)
     {
-        //
+        return new InvoiceResource($invoice);
+    }
+
+    public function bulkStore()
+    {
+        return "HEllo from bulk";
     }
 
     /**
